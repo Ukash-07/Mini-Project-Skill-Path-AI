@@ -5,12 +5,15 @@ const bcrypt = require(path.join(backendNodeModules, 'bcryptjs'));
 const fs = require('fs');
 require(path.join(backendNodeModules, 'dotenv')).config({ path: path.join(__dirname, '../backend/.env') });
 
+const targetDb = process.env.DB_NAME || 'learning_path_db';
+
 const config = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'ukash12bit',
-  multipleStatements: true
+  multipleStatements: true,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 };
 
 async function setupDatabase() {
@@ -20,15 +23,20 @@ async function setupDatabase() {
     connection = await mysql.createConnection(config);
     console.log('Connected to MySQL server on host:', config.host);
 
-    // Recreate clean database
-    console.log('Recreating fresh learning_path_db schema...');
-    await connection.query('DROP DATABASE IF EXISTS learning_path_db;');
-    await connection.query('CREATE DATABASE learning_path_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');
-    await connection.changeUser({ database: 'learning_path_db' });
+    console.log(`Setting up database "${targetDb}"...`);
+    try {
+      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${targetDb}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
+    } catch (e) {
+      console.log(`Database creation note: ${e.message} (proceeding with existing database).`);
+    }
+    await connection.changeUser({ database: targetDb });
 
     // Read and run schema.sql
     const schemaPath = path.join(__dirname, 'schema.sql');
-    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+    let schemaSql = fs.readFileSync(schemaPath, 'utf8');
+    schemaSql = schemaSql.replace(/CREATE DATABASE IF NOT EXISTS\s+[a-zA-Z0-9_]+[^;]*;/gi, '');
+    schemaSql = schemaSql.replace(/USE\s+[a-zA-Z0-9_]+;/gi, '');
+
     console.log('Executing schema.sql...');
     await connection.query(schemaSql);
     console.log('Schema created successfully.');
