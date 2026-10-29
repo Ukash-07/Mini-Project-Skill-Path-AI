@@ -11,6 +11,7 @@ router.get('/analytics', adminController.getAnalytics);
 
 // Students
 router.get('/students', adminController.getStudents);
+router.delete('/students/:id', adminController.deleteStudent);
 
 // Careers
 router.post('/careers', adminController.createCareer);
@@ -29,6 +30,7 @@ router.delete('/courses/:id', adminController.deleteCourse);
 
 // Assessments & Questions
 router.post('/assessments', adminController.createAssessment);
+router.delete('/assessments/:id', adminController.deleteAssessment);
 router.post('/questions', adminController.createQuestion);
 
 module.exports = router;

@@ -33,6 +33,7 @@ app.use('/api/learning-path', require('./routes/learningPathRoutes'));
 app.use('/api/assistant', require('./routes/assistantRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/resources', require('./routes/resourceRoutes'));
+app.use('/api/resume', require('./routes/resumeRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 
 // 404 Handler

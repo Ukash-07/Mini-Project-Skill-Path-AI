@@ -63,6 +63,33 @@ exports.getStudents = async (req, res, next) => {
   }
 };
 
+exports.deleteStudent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const [user] = await db.query(`SELECT id, role, full_name FROM users WHERE id = ?`, [id]);
+    if (!user.length) {
+      return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    if (user[0].role === 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin accounts cannot be deleted.' });
+    }
+
+    // Disassociate custom skills created by this user
+    await db.query(`UPDATE skills SET created_by_user_id = NULL WHERE created_by_user_id = ?`, [id]);
+
+    // Deleting the user cascades to student_profiles, student_preferences, student_skills,
+    // enrollments, course_progress, lesson_progress, recommendations, learning_paths,
+    // assessment_attempts, quiz_attempts, student_projects, chat_messages, notifications
+    await db.query(`DELETE FROM users WHERE id = ? AND role = 'student'`, [id]);
+
+    res.json({ success: true, message: `Student "${user[0].full_name}" deleted successfully.` });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // CRUD: Careers
 exports.createCareer = async (req, res, next) => {
   try {
@@ -171,6 +198,7 @@ exports.updateCourse = async (req, res, next) => {
 exports.deleteCourse = async (req, res, next) => {
   try {
     const { id } = req.params;
+    await db.query(`UPDATE learning_path_items SET course_id = NULL WHERE course_id = ?`, [id]);
     await db.query(`DELETE FROM courses WHERE id = ?`, [id]);
     res.json({ success: true, message: 'Course deleted successfully.' });
   } catch (err) {
@@ -179,6 +207,15 @@ exports.deleteCourse = async (req, res, next) => {
 };
 
 // CRUD: Assessments & Questions
+exports.deleteAssessment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await db.query(`DELETE FROM assessments WHERE id = ?`, [id]);
+    res.json({ success: true, message: 'Assessment deleted successfully.' });
+  } catch (err) {
+    next(err);
+  }
+};
 exports.createAssessment = async (req, res, next) => {
   try {
     const { title, career_id, skill_id, total_marks, duration_minutes } = req.body;

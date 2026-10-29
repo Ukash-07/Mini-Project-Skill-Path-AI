@@ -19,6 +19,8 @@
     "express": "^4.19.2",
     "express-validator": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.9.8"
+    "multer": "^2.5.0",
+    "mysql2": "^3.9.8",
+    "pdf-parse": "^2.4.5"
   }
 }

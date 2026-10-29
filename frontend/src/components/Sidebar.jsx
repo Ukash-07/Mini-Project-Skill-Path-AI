@@ -12,7 +12,8 @@ import {
   User,
   Users,
   Briefcase,
-  Target
+  Target,
+  FileText
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -28,7 +29,7 @@ export default function Sidebar() {
     { to: '/assistant', label: 'AI Career Assistant', icon: Sparkles },
     { to: '/resources', label: 'Learning Resources', icon: BookOpen },
     { to: '/projects', label: 'Projects & Portfolio', icon: Award },
-    { to: '/profile', label: 'Profile & Skills', icon: User }
+    { to: '/resume-analyser', label: 'Resume Analyser', icon: FileText }
   ];
 
   const adminLinks = [

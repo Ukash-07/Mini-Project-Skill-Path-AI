@@ -16,7 +16,7 @@ import RoleDetails from './pages/RoleDetails';
 import AiAssistant from './pages/AiAssistant';
 import LearningResources from './pages/LearningResources';
 import ProjectsAssessments from './pages/ProjectsAssessments';
-import Profile from './pages/Profile';
+import ResumeAnalyser from './pages/ResumeAnalyser';
 import CourseDetails from './pages/CourseDetails';
 import CoursePlayer from './pages/CoursePlayer';
 import Assessment from './pages/Assessment';
@@ -29,6 +29,7 @@ import AdminStudents from './pages/admin/AdminStudents';
 import AdminCareers from './pages/admin/AdminCareers';
 import AdminSkills from './pages/admin/AdminSkills';
 import AdminCourses from './pages/admin/AdminCourses';
+import AdminAssessments from './pages/admin/AdminAssessments';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
@@ -60,7 +61,8 @@ export default function App() {
           <Route path="/assistant" element={<ProtectedRoute><AiAssistant /></ProtectedRoute>} />
           <Route path="/resources" element={<ProtectedRoute><LearningResources /></ProtectedRoute>} />
           <Route path="/projects" element={<ProtectedRoute><ProjectsAssessments /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/resume-analyser" element={<ProtectedRoute><ResumeAnalyser /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Navigate to="/resume-analyser" replace /></ProtectedRoute>} />
 
           {/* Additional Course & Assessment Routes */}
           <Route path="/my-courses" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -78,7 +80,7 @@ export default function App() {
           <Route path="/admin/skills" element={<ProtectedRoute requiredRole="admin"><AdminSkills /></ProtectedRoute>} />
           <Route path="/admin/courses" element={<ProtectedRoute requiredRole="admin"><AdminCourses /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/assessments" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/assessments" element={<ProtectedRoute requiredRole="admin"><AdminAssessments /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

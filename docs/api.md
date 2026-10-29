@@ -36,9 +36,15 @@
 - `POST /api/assessments/:id/submit`: Submit assessment answers, auto-grade, & update skills.
 - `POST /api/quizzes/:id/submit`: Submit module quiz answers.
 
+## Resume Analyser (`/api/resume`)
+- `POST /api/resume/analyze`: Upload resume (PDF, TXT) or raw text to extract skills and match career roles.
+- `POST /api/resume/import-skills`: Synchronize detected skills from resume into student's skill matrix.
+
 ## Admin Endpoints (`/api/admin/*`)
 - `GET    /api/admin/analytics`: System-wide statistics.
 - `GET    /api/admin/students`: Manage student directory.
+- `DELETE /api/admin/students/:id`: Delete a student and cascade associated data.
 - `POST/PUT/DELETE /api/admin/careers`: Career CRUD.
 - `POST/PUT/DELETE /api/admin/skills`: Skill CRUD.
 - `POST/PUT/DELETE /api/admin/courses`: Course CRUD.
+- `POST/DELETE     /api/admin/assessments`: Assessment management.
