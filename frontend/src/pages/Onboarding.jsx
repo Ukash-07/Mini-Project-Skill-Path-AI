@@ -27,6 +27,16 @@ const INTEREST_DOMAINS = [
   'Software Engineering'
 ];
 
+const INTEREST_CAREER_MAP = {
+  'Mobile Development': 7, // Mobile App Developer
+  'AI/ML': 11, // AI Engineer
+  'Data Science': 9, // Data Scientist
+  'Cybersecurity': 17, // Cybersecurity Analyst
+  'Cloud Computing': 15, // Cloud Engineer
+  'Web Development': 1, // Frontend Developer
+  'Software Engineering': 6 // Software Engineer
+};
+
 const LEARNING_STYLES = [
   'Interactive Courses',
   'Videos',
@@ -119,11 +129,17 @@ export default function Onboarding() {
 
   const handleInterestToggle = (interest) => {
     setSelectedInterests(prev => {
-      if (prev.includes(interest)) {
-        return prev.filter(i => i !== interest);
-      } else {
-        return [...prev, interest];
+      const isAdding = !prev.includes(interest);
+      const updated = isAdding ? [...prev, interest] : prev.filter(i => i !== interest);
+
+      // Auto-align preferred target career with selected interest (e.g. Mobile Development -> Mobile App Developer)
+      if (isAdding && INTEREST_CAREER_MAP[interest]) {
+        setTargetCareerId(INTEREST_CAREER_MAP[interest].toString());
+      } else if (updated.length > 0 && INTEREST_CAREER_MAP[updated[0]]) {
+        setTargetCareerId(INTEREST_CAREER_MAP[updated[0]].toString());
       }
+
+      return updated;
     });
   };
 
@@ -155,7 +171,11 @@ export default function Onboarding() {
     setSaving(true);
     setSubmitError('');
     try {
-      const cId = parseInt(targetCareerId) || (careers.length > 0 ? careers[0].id : 2);
+      const fallbackCareer = selectedInterests[0] && INTEREST_CAREER_MAP[selectedInterests[0]]
+        ? INTEREST_CAREER_MAP[selectedInterests[0]]
+        : (careers.length > 0 ? careers[0].id : 7);
+
+      const cId = parseInt(targetCareerId) || fallbackCareer;
 
       // 1. Update Profile & Interests & Preferences
       await api.put('/students/profile', {
@@ -465,17 +485,47 @@ export default function Onboarding() {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Preferred Career Goal</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">Preferred Career Goal</label>
+                  {selectedInterests.length > 0 && (
+                    <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-indigo-500" />
+                      Auto-aligned with {selectedInterests.join(', ')}
+                    </span>
+                  )}
+                </div>
                 <select
                   value={targetCareerId}
                   onChange={(e) => setTargetCareerId(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
                 >
-                  {careers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.domain.split(' ')[0]})
-                    </option>
-                  ))}
+                  {/* Recommended roles based on interest */}
+                  {selectedInterests.length > 0 && (
+                    <optgroup label="⭐ Recommended for your selected interests">
+                      {careers
+                        .filter((c) => {
+                          const interestCareerId = INTEREST_CAREER_MAP[selectedInterests[0]];
+                          const matchesCategory = selectedInterests.some((i) =>
+                            (c.category && c.category.toLowerCase().includes(i.toLowerCase())) ||
+                            (c.name && c.name.toLowerCase().includes(i.toLowerCase())) ||
+                            (c.domain && c.domain.toLowerCase().includes(i.toLowerCase()))
+                          );
+                          return c.id === interestCareerId || matchesCategory;
+                        })
+                        .map((c) => (
+                          <option key={`rec-${c.id}`} value={c.id}>
+                            ⭐ {c.name} ({c.domain.split(' ')[0]})
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                  <optgroup label="All Other Career Roles">
+                    {careers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.domain.split(' ')[0]})
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
 

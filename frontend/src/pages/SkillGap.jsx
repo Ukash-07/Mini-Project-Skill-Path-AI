@@ -24,23 +24,33 @@ export default function SkillGap() {
   const roleQueryParam = searchParams.get('role');
 
   const [allCareers, setAllCareers] = useState([]);
-  const [selectedCareerId, setSelectedCareerId] = useState(roleQueryParam || '2');
+  const [selectedCareerId, setSelectedCareerId] = useState(roleQueryParam || '');
+  const [userTargetCareerId, setUserTargetCareerId] = useState(null);
+  const [settingTarget, setSettingTarget] = useState(false);
   const [gapData, setGapData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch career list for role dropdown selector
+  // Fetch career list and student profile
   useEffect(() => {
     const fetchCareers = async () => {
       try {
-        const res = await api.get('/careers');
-        if (res.success) {
-          setAllCareers(res.data);
-          if (!roleQueryParam && res.data.length > 0) {
-            // If no query param, check if user has target career or default to 2 (Backend Developer)
-            const profRes = await api.get('/students/profile');
-            const targetId = profRes?.data?.profile?.target_career_id || 2;
-            setSelectedCareerId(targetId.toString());
-          }
+        const [cRes, profRes] = await Promise.all([
+          api.get('/careers'),
+          api.get('/students/profile')
+        ]);
+
+        if (cRes.success) {
+          setAllCareers(cRes.data);
+        }
+
+        const targetId = profRes?.data?.profile?.target_career_id;
+        if (targetId) {
+          setUserTargetCareerId(targetId);
+        }
+
+        if (!roleQueryParam) {
+          const effectiveId = targetId || (cRes.data && cRes.data[0] ? cRes.data[0].id : 7);
+          setSelectedCareerId(effectiveId.toString());
         }
       } catch (err) {
         console.error('Failed to load careers:', err);
@@ -73,6 +83,23 @@ export default function SkillGap() {
     const newId = e.target.value;
     setSelectedCareerId(newId);
     setSearchParams({ role: newId });
+  };
+
+  const handleSetTargetCareer = async () => {
+    if (!selectedCareerId) return;
+    setSettingTarget(true);
+    try {
+      const res = await api.put('/students/profile', {
+        target_career_id: parseInt(selectedCareerId)
+      });
+      if (res.success) {
+        setUserTargetCareerId(parseInt(selectedCareerId));
+      }
+    } catch (err) {
+      console.error('Failed to update target career:', err);
+    } finally {
+      setSettingTarget(false);
+    }
   };
 
   // Format chart data for Recharts
@@ -108,9 +135,24 @@ export default function SkillGap() {
 
             {/* Role Dropdown Selector */}
             <div className="space-y-1.5 shrink-0 min-w-[240px]">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Select Career Target Role:
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Select Career Target Role:
+                </label>
+                {userTargetCareerId === parseInt(selectedCareerId) ? (
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Target Role
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleSetTargetCareer}
+                    disabled={settingTarget}
+                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline disabled:opacity-50"
+                  >
+                    {settingTarget ? 'Saving...' : 'Set as Target'}
+                  </button>
+                )}
+              </div>
               <select
                 value={selectedCareerId}
                 onChange={handleCareerChange}

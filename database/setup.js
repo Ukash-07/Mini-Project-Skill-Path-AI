@@ -568,6 +568,9 @@ async function setupDatabase() {
       [41, 'LangChain Official Documentation & RAG Quickstart', 'https://python.langchain.com/docs/get_started/introduction', 'Documentation', 'LangChain Docs', 'Intermediate', 120],
       [45, 'OWASP Top 10 Web Application Security Risks', 'https://owasp.org/www-project-top-ten/', 'Documentation', 'OWASP Foundation', 'Intermediate', 90],
       [50, 'Postman API Learning Center & Automated Testing', 'https://learning.postman.com/docs/getting-started/introduction/', 'Interactive Courses', 'Postman Docs', 'Beginner', 60],
+      [53, 'React Native Official Documentation & Getting Started', 'https://reactnative.dev/docs/getting-started', 'Documentation', 'React Native Official', 'Beginner', 90],
+      [53, 'Expo Tutorial: Build a Universal Native App with React Native', 'https://docs.expo.dev/tutorial/introduction/', 'Interactive Courses', 'Expo Docs', 'Intermediate', 180],
+      [53, 'React Native Components & Navigation Guide', 'https://reactnative.dev/docs/components-and-apis', 'Documentation', 'React Native Dev', 'Intermediate', 120],
       [54, 'Figma for Beginners Tutorial Series', 'https://help.figma.com/hc/en-us/categories/360002051613-Figma-Design', 'Documentation', 'Figma Learn', 'Beginner', 90]
     ];
 

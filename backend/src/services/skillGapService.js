@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { resolveCareerFromInterests } = require('../utils/careerHelper');
 
 /**
  * Skill Gap Analysis Service
@@ -10,13 +11,13 @@ async function calculateSkillGap(userId, targetCareerId) {
   let careerId = targetCareerId;
   if (!careerId) {
     const [profileRows] = await db.query(
-      `SELECT target_career_id FROM student_profiles WHERE user_id = ?`,
+      `SELECT target_career_id, interests FROM student_profiles WHERE user_id = ?`,
       [userId]
     );
     if (profileRows.length > 0 && profileRows[0].target_career_id) {
       careerId = profileRows[0].target_career_id;
     } else {
-      careerId = 2; // Default to Backend Developer if unselected
+      careerId = resolveCareerFromInterests(profileRows[0]?.interests) || 2;
     }
   }
 

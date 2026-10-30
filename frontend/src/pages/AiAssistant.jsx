@@ -14,13 +14,16 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const SUGGESTED_PROMPTS = [
-  'What should I learn next?',
-  'Can I become a Full Stack Developer with my current skills?',
-  'What skills am I missing for a Backend Developer role?',
-  'Which project should I build next?',
-  'How can I improve my proficiency in Node.js?'
-];
+const getSuggestedPrompts = (roleName) => {
+  const role = roleName || 'my chosen career';
+  return [
+    'What should I learn next?',
+    `Can I become a ${role} with my current skills?`,
+    `What skills am I missing for ${role}?`,
+    'Which project should I build next?',
+    'What are the key benchmark skills I should focus on?'
+  ];
+};
 
 export default function AiAssistant() {
   const [messages, setMessages] = useState([]);
@@ -28,6 +31,8 @@ export default function AiAssistant() {
   const [loading, setLoading] = useState(false);
   const [contextInfo, setContextInfo] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const suggestedPrompts = getSuggestedPrompts(contextInfo?.target_career_name);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,10 +54,11 @@ export default function AiAssistant() {
           setMessages(histRes.data);
         } else {
           // Default welcoming message
+          const roleName = profRes?.data?.profile?.target_career_name;
           setMessages([
             {
               sender: 'assistant',
-              message: `Hello! I am your **SkillPath AI** Career and Learning Assistant. I have analyzed your active profile, assessed skills, and roadmap. Ask me anything about what to learn next, your skill gaps, or how to prepare for your target career role!`
+              message: `Hello! I am your **SkillPath AI** Career and Learning Assistant. I have analyzed your active profile, assessed skills, and roadmap${roleName ? ` for **${roleName}**` : ''}. Ask me anything about what to learn next, your skill gaps, or how to prepare for your target career role!`
             }
           ]);
         }
@@ -239,7 +245,7 @@ export default function AiAssistant() {
               Suggested Questions (Click to Ask):
             </span>
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              {SUGGESTED_PROMPTS.map((prompt, pIdx) => (
+              {suggestedPrompts.map((prompt, pIdx) => (
                 <button
                   key={pIdx}
                   onClick={() => handlePromptClick(prompt)}

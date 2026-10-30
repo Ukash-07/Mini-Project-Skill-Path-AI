@@ -27,7 +27,7 @@ export default function LearningPathPage() {
   const roleQuery = searchParams.get('role');
 
   const [allCareers, setAllCareers] = useState([]);
-  const [selectedCareerId, setSelectedCareerId] = useState(roleQuery || '2');
+  const [selectedCareerId, setSelectedCareerId] = useState(roleQuery || '');
   const [roadmap, setRoadmap] = useState(null);
   const [loading, setLoading] = useState(true);
   const [togglingSkillId, setTogglingSkillId] = useState(null);
@@ -36,21 +36,24 @@ export default function LearningPathPage() {
   useEffect(() => {
     const fetchCareers = async () => {
       try {
-        const res = await api.get('/careers');
-        if (res.success) {
-          setAllCareers(res.data);
-          if (!roleQuery && res.data.length > 0) {
-            const profRes = await api.get('/students/profile');
-            const targetId = profRes?.data?.profile?.target_career_id || 2;
-            setSelectedCareerId(targetId.toString());
-          }
+        const [cRes, profRes] = await Promise.all([
+          api.get('/careers'),
+          api.get('/students/profile')
+        ]);
+        if (cRes.success) {
+          setAllCareers(cRes.data);
+        }
+        if (!roleQuery) {
+          const targetId = profRes?.data?.profile?.target_career_id;
+          const effectiveId = targetId || (cRes.data && cRes.data[0] ? cRes.data[0].id : 7);
+          setSelectedCareerId(effectiveId.toString());
         }
       } catch (err) {
         console.error('Failed to load careers:', err);
       }
     };
     fetchCareers();
-  }, []);
+  }, [roleQuery]);
 
   const fetchRoadmap = async (cId) => {
     setLoading(true);

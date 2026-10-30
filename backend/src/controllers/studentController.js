@@ -2,6 +2,7 @@ const db = require('../config/database');
 const { calculateCareerRecommendations } = require('../services/careerRecommendationService');
 const { calculateSkillGap } = require('../services/skillGapService');
 const learningPathService = require('../services/learningPathService');
+const { resolveCareerFromInterests } = require('../utils/careerHelper');
 
 exports.getProfile = async (req, res, next) => {
   try {
@@ -23,6 +24,16 @@ exports.getProfile = async (req, res, next) => {
         profile.interests = JSON.parse(profile.interests);
       } catch (e) {
         profile.interests = [];
+      }
+
+      // If target_career_id is not set, resolve from interests
+      if (!profile.target_career_id && Array.isArray(profile.interests) && profile.interests.length > 0) {
+        const inferredId = resolveCareerFromInterests(profile.interests);
+        if (inferredId) {
+          profile.target_career_id = inferredId;
+          const [cRow] = await db.query(`SELECT name FROM careers WHERE id = ?`, [inferredId]);
+          if (cRow.length > 0) profile.target_career_name = cRow[0].name;
+        }
       }
     }
 
@@ -55,6 +66,11 @@ exports.updateProfile = async (req, res, next) => {
       target_completion_weeks
     } = req.body;
 
+    let effectiveTargetCareerId = target_career_id;
+    if (!effectiveTargetCareerId && interests) {
+      effectiveTargetCareerId = resolveCareerFromInterests(interests);
+    }
+
     const interestsJson = Array.isArray(interests) ? JSON.stringify(interests) : (interests || '[]');
 
     await db.query(
@@ -74,7 +90,7 @@ exports.updateProfile = async (req, res, next) => {
         education_level,
         current_qualification,
         experience_level,
-        target_career_id,
+        effectiveTargetCareerId,
         interestsJson,
         preferred_learning_style || 'Interactive Courses',
         weekly_learning_hours || 10
@@ -188,14 +204,20 @@ exports.getProgress = async (req, res, next) => {
 
     // Get Target Career
     const [profileRows] = await db.query(
-      `SELECT sp.target_career_id, c.name as target_career_name
+      `SELECT sp.target_career_id, sp.interests, c.name as target_career_name
        FROM student_profiles sp
        LEFT JOIN careers c ON sp.target_career_id = c.id
        WHERE sp.user_id = ?`,
       [userId]
     );
-    const careerId = (profileRows[0] && profileRows[0].target_career_id) || 2;
-    const careerName = (profileRows[0] && profileRows[0].target_career_name) || 'Backend Developer';
+    let careerId = profileRows[0]?.target_career_id;
+    let careerName = profileRows[0]?.target_career_name;
+
+    if (!careerId) {
+      careerId = resolveCareerFromInterests(profileRows[0]?.interests) || 2;
+      const [cRows] = await db.query(`SELECT name FROM careers WHERE id = ?`, [careerId]);
+      careerName = cRows[0]?.name || 'Backend Developer';
+    }
 
     // Skill Gap & Roadmap Info
     const gapInfo = await calculateSkillGap(userId, careerId);

@@ -1,18 +1,21 @@
 const db = require('../config/database');
+const { resolveCareerFromInterests } = require('../utils/careerHelper');
 
 exports.getResources = async (req, res, next) => {
   try {
     let { careerId, career_id, skillId, type, difficulty, search } = req.query;
     careerId = careerId || career_id;
 
-    // If careerId not provided in query, look up student's selected target career
+    // If careerId not provided in query, look up student's selected target career or interest
     if (!careerId && req.user && req.user.id) {
       const [profiles] = await db.query(
-        `SELECT target_career_id FROM student_profiles WHERE user_id = ?`,
+        `SELECT target_career_id, interests FROM student_profiles WHERE user_id = ?`,
         [req.user.id]
       );
       if (profiles.length > 0 && profiles[0].target_career_id) {
         careerId = profiles[0].target_career_id;
+      } else if (profiles.length > 0 && profiles[0].interests) {
+        careerId = resolveCareerFromInterests(profiles[0].interests);
       }
     }
 
